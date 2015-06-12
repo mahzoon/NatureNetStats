@@ -187,6 +187,8 @@ namespace NatureNetStats
         public int comments { get; set; }
         public int likes { get; set; }
         public int interactions { get; set; }
+        public int num_active_users { get; set; }
+        public int num_new_users { get; set; }
 
         public DailyLogDataSource(DateTime d)
         {

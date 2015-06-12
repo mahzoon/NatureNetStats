@@ -95,6 +95,8 @@ namespace NatureNetStats
             DataColumn c10 = new DataColumn("Comments", System.Type.GetType("System.Int32")); daily_log_table.Columns.Add(c10);
             DataColumn c11 = new DataColumn("Likes", System.Type.GetType("System.Int32")); daily_log_table.Columns.Add(c11);
             DataColumn c12 = new DataColumn("Interactions", System.Type.GetType("System.Int32")); daily_log_table.Columns.Add(c12);
+            DataColumn c13 = new DataColumn("Num of Active Users", System.Type.GetType("System.Int32")); daily_log_table.Columns.Add(c13);
+            DataColumn c14 = new DataColumn("Num of New Users", System.Type.GetType("System.Int32")); daily_log_table.Columns.Add(c14);
 
             comboBox_source_tables.SelectedIndex = 0;
             comboBox_source_tables.SelectedIndexChanged += new EventHandler(comboBox_source_tables_SelectedIndexChanged);

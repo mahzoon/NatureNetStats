@@ -94,6 +94,87 @@ namespace NatureNetStats
                         select u.id;
             return users.Count();
         }
+        public static int GetNumActiveUsers(NatureNetDataClassesDataContext db)
+        {
+            var logs1 = from i in db.Interaction_Logs
+                        where (i.type == 29) || (i.type == 38)
+                        select i;
+            List<int> distinct_users = new List<int>();
+            string search_str = "user id: ";
+            foreach (Interaction_Log log in logs1)
+            {
+                int i = log.details.IndexOf(search_str);
+                if (i == -1) continue;
+                i = i + search_str.Length;
+                string n = "";
+                while (i < log.details.Length && Char.IsDigit(log.details[i])) { n = n + log.details[i]; i++; }
+                int id = -1;
+                try { id = Convert.ToInt32(n); }
+                catch (Exception) { continue; }
+                if (!distinct_users.Contains(id)) distinct_users.Add(id);
+            }
+            var logs2 = from i in db.Interaction_Logs
+                        where (i.type == 38)
+                        select i;
+            foreach (Interaction_Log log in logs2)
+            {
+                string uname = "";
+                try { uname = log.details.Split(new char[] { '=' })[1]; }
+                catch (Exception) { continue; }
+                int id = GetUserID(db, uname);
+                if (id == -1) continue;
+                if (!distinct_users.Contains(id)) distinct_users.Add(id);
+            }
+            return distinct_users.Count();
+        }
+        public static int GetNumActiveUsers(NatureNetDataClassesDataContext db, DateTime _from, DateTime _to)
+        {
+            var logs1 = from i in db.Interaction_Logs
+                        where (i.type == 29) && (i.date.CompareTo(_from) >= 0) && (i.date.CompareTo(_to) < 0)
+                        select i;
+            List<int> distinct_users = new List<int>();
+            string search_str = "user id: ";
+            foreach (Interaction_Log log in logs1)
+            {
+                int id = -1;
+                int i = log.details.IndexOf(search_str);
+                if (i == -1)
+                    continue;
+                i = i + search_str.Length;
+                string n = "";
+                while (i < log.details.Length && Char.IsDigit(log.details[i])) { n = n + log.details[i]; i++; }
+                try { id = Convert.ToInt32(n); }
+                catch (Exception) { continue; }
+                if (!distinct_users.Contains(id)) distinct_users.Add(id);
+            }
+            var logs2 = from i in db.Interaction_Logs
+                        where (i.type == 38) && (i.date.CompareTo(_from) >= 0) && (i.date.CompareTo(_to) < 0)
+                        select i;
+            foreach (Interaction_Log log in logs2)
+            {
+                string uname="";
+                try { uname = log.details.Split(new char[] { '=' })[1]; }
+                catch (Exception) { continue; }
+                int id = GetUserID(db, uname);
+                if (id == -1) continue;
+                if (!distinct_users.Contains(id)) distinct_users.Add(id);
+            }
+            return distinct_users.Count();
+        }
+        public static int GetNumNewUsers(NatureNetDataClassesDataContext db)
+        {
+            var users = from i in db.Interaction_Logs
+                        where (i.type == 38)
+                        select i;
+            return users.Count();
+        }
+        public static int GetNumNewUsers(NatureNetDataClassesDataContext db, DateTime _from, DateTime _to)
+        {
+            var users = from i in db.Interaction_Logs
+                        where (i.type == 38) && (i.date.CompareTo(_from) >= 0) && (i.date.CompareTo(_to) < 0)
+                        select i;
+            return users.Count();
+        }
         public static int GetLevelOfComment(NatureNetDataClassesDataContext db, Feedback f)
         {
             if (f.parent_id == 0) return 0;
@@ -117,6 +198,14 @@ namespace NatureNetStats
             if (users.Count() != 1) return "";
             return users.Single<User>().name;
         }
+        public static int GetUserID(NatureNetDataClassesDataContext db, string username)
+        {
+            var users = from u in db.Users
+                        where u.name == username
+                        select u;
+            if (users.Count() != 1) return -1;
+            return users.Single<User>().id;
+        }
 
         public static List<DailyLogDataSource> GetDailyLogDataSource(DateTime _from, DateTime _to)
         {
@@ -134,8 +223,10 @@ namespace NatureNetStats
                 log.likes = GetNumLikes(db, dt_from, dt_to);
                 log.medias = GetNumObservations(db, dt_from, dt_to);
                 log.date = dt_from;
+                log.num_active_users = GetNumActiveUsers(db, dt_from, dt_to);
+                log.num_new_users = GetNumNewUsers(db, dt_from, dt_to);
                 if (log.comments != 0 || log.ideas != 0 || log.interactions != 0 ||
-                    log.likes != 0 || log.medias != 0)
+                    log.likes != 0 || log.medias != 0 || log.num_active_users != 0 || log.num_new_users != 0)
                     results.Add(log);
                 dt_from = dt_from.AddDays(1);
                 dt_to = dt_to.AddDays(1);
